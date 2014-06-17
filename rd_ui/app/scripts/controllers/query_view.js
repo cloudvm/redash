@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  function QueryViewCtrl($scope, Events, $route, $location, notifications, growl, Query, DataSource, $http) {
+  function QueryViewCtrl($scope, Events, $route, $location, notifications, growl, Query, DataSource, $http, $routeParams) {
     var DEFAULT_TAB = 'table';
 
     $scope.query = $route.current.locals.query;
@@ -179,9 +179,24 @@
       }
       $scope.selectedTab = hash || DEFAULT_TAB;
     });
+
+    var campaign_id = $routeParams.campaign_id
+    var bundle_id = $routeParams.bundle_id
+    var tmp = $scope.query.query;
+    if (typeof campaign_id !== 'undefined') {
+      tmp = tmp.replace("FILL_CAMPAIGN_ID_HERE", campaign_id)
+    }
+    if (typeof bundle_id !== 'undefined') {
+      tmp = tmp.replace("FILL_BUNDLE_ID_HERE", bundle_id)
+    }
+    if (tmp !== $scope.query.query) {
+      $scope.query.query = tmp
+      $scope.executeQuery();
+    }
+
   };
 
   angular.module('redash.controllers')
     .controller('QueryViewCtrl',
-      ['$scope', 'Events', '$route', '$location', 'notifications', 'growl', 'Query', 'DataSource', '$http', QueryViewCtrl]);
+      ['$scope', 'Events', '$route', '$location', 'notifications', 'growl', 'Query', 'DataSource', '$http', '$routeParams', QueryViewCtrl]);
 })();
