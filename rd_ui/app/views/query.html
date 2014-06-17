@@ -39,6 +39,19 @@
               </ul>
             </div>
 
+
+            <div class="btn-group" dropdown is-open="status.isopen">
+              <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
+                Add Template <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu">
+                <li ng-repeat="template in templateList">
+                  <a ng-click="addTemplate(template)">
+                    {{template['desc']}}
+                  </a>
+                </li>
+              </ul>
+            </div>
             <div class="visible-xs">
                 <p>
                     <span class="text-muted">Last update </span>

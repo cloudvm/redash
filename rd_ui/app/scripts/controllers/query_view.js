@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  function QueryViewCtrl($scope, Events, $route, $location, notifications, growl, Query, DataSource) {
+  function QueryViewCtrl($scope, Events, $route, $location, notifications, growl, Query, DataSource, $http) {
     var DEFAULT_TAB = 'table';
 
     $scope.query = $route.current.locals.query;
@@ -19,6 +19,22 @@
       {'desc':'Join Device', 'query':'JOIN client_devices ON ad_events.client_device_id = client_devices.id'},
       {'desc':'CTR', 'query':'SELECT (100 * CAST (click as real)) / cast (impression as real) from (select sum(case when event=\'session\' then 1 else 0 end) as "click", sum(case when event=\'impression\' then 1 else 0 end) as "impression" from ad_events)'},
       {'desc':'Install Rate', 'query':'SELECT (100 * CAST (install as real)) / cast (impression as real) from (select sum(case when event=\'store\' then 1 else 0 end) as "install", sum(case when event=\'impression\' then 1 else 0 end) as "impression" from ad_events)'},
+      {'desc':'Bucket over days', 'query':'SELECT count(*), date (convert_timezone(\'PDT\', created_at)) FROM ad_events GROUP BY 2 ORDER BY 2 DESC'},
+      {'desc':'Bucket over hours', 'query':'SELECT count(*), date_trunc(\'hour\', created_at) FROM ad_events GROUP BY 2 ORDER BY 2 DESC'},
+    ]
+
+    $scope.templateList = [
+      {'desc':'performance for specific bundle+campaign', 'query':'SELECT date, impression, click, store, ' +
+                                                                  '      (click*1.0 / impression) AS "CTR", (store*1.0 / impression) AS "install" ' +
+                                                                  'FROM (SELECT date (convert_timezone(\'PDT\', created_at)), ' +
+                                                                  '     sum(CASE WHEN event=\'impression\' THEN 1 ELSE 0 END) AS "impression",' +
+                                                                  '          sum(CASE WHEN event=\'click\' THEN 1 ELSE 0 END) AS "click",' +
+                                                                  '          sum(CASE WHEN event=\'store\' THEN 1 ELSE 0 END) AS "store"' +
+                                                                  '   FROM ad_events' +
+                                                                  '   WHERE ad_campaign_id = FILL_CAMPAIGN_ID_HERE' +
+                                                                  '     AND bundle_id = \'FILL_BUNDLE_ID_HERE\'' +
+                                                                  '   GROUP BY 1' +
+                                                                  '   ORDER BY 1 DESC)'},
     ]
 
     $scope.isQueryOwner = currentUser.id === $scope.query.user.id;
@@ -27,6 +43,18 @@
     $scope.dataSources = DataSource.get(function(dataSources) {
       $scope.query.data_source_id = $scope.query.data_source_id || dataSources[0].id;
     });
+
+    $scope.addTemplate = function(template) {
+      $scope.query.query = $scope.query.query + '\n' + template['query']
+      $scope.queryExecuting = true;
+      $http.post('/api/queries/format', {
+          'query': $scope.query.query
+      }).success(function (response) {
+          $scope.query.query = response;
+      }).finally(function () {
+        $scope.queryExecuting = false;
+      });
+    }
 
     $scope.lockButton = function(lock) {
       $scope.queryExecuting = lock;
@@ -155,5 +183,5 @@
 
   angular.module('redash.controllers')
     .controller('QueryViewCtrl',
-      ['$scope', 'Events', '$route', '$location', 'notifications', 'growl', 'Query', 'DataSource', QueryViewCtrl]);
+      ['$scope', 'Events', '$route', '$location', 'notifications', 'growl', 'Query', 'DataSource', '$http', QueryViewCtrl]);
 })();
