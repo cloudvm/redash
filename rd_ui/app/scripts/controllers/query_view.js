@@ -9,6 +9,18 @@
     $scope.queryResult = $scope.query.getQueryResult();
     $scope.queryExecuting = false;
 
+    $scope.filterList = [
+      {'desc':'Time Range', 'query':'WHERE created_at >= (CURRENT_DATE + interval \'7 hours\' - 1) AND created_at < (CURRENT_DATE + interval \'7 hours\')'},
+      {'desc':'Ad Campaign', 'query':'WHERE ad_campaign_id = 11'},
+      {'desc':'Bundle ID', 'query':'WHERE bundle_id = \'com.xyz.abc\''},
+      {'desc':'Publisher ID', 'query':'WHERE ad_publisher_app_id = 2'},
+      {'desc':'Join Pulisher', 'query':'JOIN ad_publisher_apps ON ad_events.ad_publisher_app_id = ad_publisher_apps.id'},
+      {'desc':'Join Campaign', 'query':'JOIN ad_campaigns ON ad_events.ad_campaign_id = ad_campaigns.id'},
+      {'desc':'Join Device', 'query':'JOIN client_devices ON ad_events.client_device_id = client_devices.id'},
+      {'desc':'CTR', 'query':'SELECT (100 * CAST (click as real)) / cast (impression as real) from (select sum(case when event=\'session\' then 1 else 0 end) as "click", sum(case when event=\'impression\' then 1 else 0 end) as "impression" from ad_events)'},
+      {'desc':'Install Rate', 'query':'SELECT (100 * CAST (install as real)) / cast (impression as real) from (select sum(case when event=\'store\' then 1 else 0 end) as "install", sum(case when event=\'impression\' then 1 else 0 end) as "impression" from ad_events)'},
+    ]
+
     $scope.isQueryOwner = currentUser.id === $scope.query.user.id;
     $scope.canViewSource = currentUser.hasPermission('view_source');
 
