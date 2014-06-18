@@ -17,6 +17,8 @@
       {'desc':'Join Pulisher', 'query':'JOIN ad_publisher_apps ON ad_events.ad_publisher_app_id = ad_publisher_apps.id'},
       {'desc':'Join Campaign', 'query':'JOIN ad_campaigns ON ad_events.ad_campaign_id = ad_campaigns.id'},
       {'desc':'Join Device', 'query':'JOIN client_devices ON ad_events.client_device_id = client_devices.id'},
+      {'desc':'Join Sessions', 'query':'JOIN app_sessions_v2 ON ad_events.ad_session_id = app_sessions_v2.ad_session_id'},
+      {'desc':'Join Metrics', 'query':'JOIN app_session_metrics ON app_session_metrics.app_session_id = app_sessions_v2.id'},
       {'desc':'CTR', 'query':'SELECT (100 * CAST (click as real)) / cast (impression as real) from (select sum(case when event=\'session\' then 1 else 0 end) as "click", sum(case when event=\'impression\' then 1 else 0 end) as "impression" from ad_events)'},
       {'desc':'Install Rate', 'query':'SELECT (100 * CAST (install as real)) / cast (impression as real) from (select sum(case when event=\'store\' then 1 else 0 end) as "install", sum(case when event=\'impression\' then 1 else 0 end) as "impression" from ad_events)'},
       {'desc':'Bucket over days', 'query':'SELECT count(*), date (convert_timezone(\'PDT\', created_at)) FROM ad_events GROUP BY 2 ORDER BY 2 DESC'},
@@ -25,7 +27,7 @@
 
     $scope.templateList = [
       {'desc':'performance for specific bundle+campaign', 'query':'SELECT date, impression, click, store, ' +
-                                                                  '      (click*1.0 / impression) AS "CTR", (store*1.0 / impression) AS "install" ' +
+                                                                  '      (click*100.0 / impression) AS "CTR", (store*100.0 / click) AS "install" ' +
                                                                   'FROM (SELECT date (convert_timezone(\'PDT\', created_at)), ' +
                                                                   '     sum(CASE WHEN event=\'impression\' THEN 1 ELSE 0 END) AS "impression",' +
                                                                   '          sum(CASE WHEN event=\'click\' THEN 1 ELSE 0 END) AS "click",' +
